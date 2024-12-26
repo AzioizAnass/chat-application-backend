@@ -1,0 +1,1 @@
+ALTER TABLE article MODIFY COLUMN creation_date TIMESTAMP;

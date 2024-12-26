@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>Chat Application</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .chat-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #auth-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            z-index: 1000;
+        }
+        #chat-page {
+            display: none;
+        }
+        .chat-messages {
+            height: 400px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: scroll;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .message.sent {
+            background-color: #e3f2fd;
+            margin-left: 50px;
+        }
+        .message.received {
+            background-color: #f5f5f5;
+            margin-right: 50px;
+        }
+        .users-list {
+            height: 400px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .user-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .user-item:hover {
+            background-color: #f8f9fa;
+        }
+        .user-item.active {
+            background-color: #e3f2fd;
+        }
+        .chat-area {
+            display: none;
+        }
+        .no-chat-selected {
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ddd;
+            color: #666;
+        }
+        .auth-form {
+            display: none;
+        }
+        .auth-form.active {
+            display: block;
+        }
+        .auth-toggle {
+            margin-top: 15px;
+            color: #007bff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div id="auth-page">
+    <div class="container text-center">
+        <h2 class="mb-4">Chat Application</h2>
+
+        <!-- Formulaire de connexion -->
+        <form id="loginForm" class="auth-form active w-100" style="max-width: 400px;">
+            <h3 class="mb-3">Connexion</h3>
+            <div class="form-group">
+                <input type="text" class="form-control" name="username" placeholder="Nom d'utilisateur" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" name="password" placeholder="Mot de passe" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
+            <p class="auth-toggle" onclick="toggleAuthForm('register')">Pas encore inscrit ? Créer un compte</p>
+        </form>
+
+        <!-- Formulaire d'inscription -->
+        <form id="registerForm" class="auth-form w-100" style="max-width: 400px;">
+            <h3 class="mb-3">Inscription</h3>
+            <div class="form-group">
+                <input type="text" class="form-control" name="username" placeholder="Nom d'utilisateur" required>
+            </div>
+            <div class="form-group">
+                <input type="email" class="form-control" name="email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" name="password" placeholder="Mot de passe" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">S'inscrire</button>
+            <p class="auth-toggle" onclick="toggleAuthForm('login')">Déjà inscrit ? Se connecter</p>
+        </form>
+    </div>
+</div>
+
+<div id="chat-page">
+    <div class="container chat-container">
+        <div class="row">
+            <div class="col-md-4">
+                <h4>Utilisateurs connectés</h4>
+                <div id="usersList" class="users-list"></div>
+            </div>
+
+            <div class="col-md-8">
+                <div id="noChatSelected" class="no-chat-selected">
+                    <p>Sélectionnez un utilisateur pour commencer une conversation</p>
+                </div>
+                <div id="chatArea" class="chat-area">
+                    <h4 id="chatWith"></h4>
+                    <div id="messageArea" class="chat-messages"></div>
+                    <form id="messageForm">
+                        <div class="input-group">
+                            <input type="text" id="message" class="form-control" placeholder="Tapez votre message...">
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-primary">Envoyer</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    let stompClient = null;
+    let username = null;
+    let selectedUser = null;
+    let conversations = {};
+
+    function toggleAuthForm(form) {
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        document.querySelector(`#${form}Form`).classList.add('active');
+    }
+
+    async function register(event) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+            username: form.username.value,
+            email: form.email.value,
+            password: form.password.value
+        };
+
+        try {
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                alert(error.message || 'Erreur lors de l\'inscription');
+                return;
+            }
+
+            // Connexion automatique après inscription
+            const loginResponse = await fetch('/api/auth/signin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    usernameOrEmail: form.email.value,
+                    password: form.password.value
+                })
+            });
+
+            if (!loginResponse.ok) {
+                alert('Inscription réussie mais erreur lors de la connexion automatique');
+                toggleAuthForm('login');
+                return;
+            }
+
+            const result = await loginResponse.json();
+            username = data.username; // Utiliser le nom d'utilisateur de l'inscription
+            document.querySelector('#auth-page').style.display = 'none';
+            document.querySelector('#chat-page').style.display = 'block';
+            connect();
+
+        } catch (error) {
+            alert('Erreur lors de l\'inscription');
+            console.error('Erreur:', error);
+        }
+    }
+
+    async function login(event) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+            username: form.username.value,
+            password: form.password.value
+        };
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                alert(error.error || 'Erreur de connexion');
+                return;
+            }
+
+            const result = await response.json();
+            username = result.username;
+            document.querySelector('#auth-page').style.display = 'none';
+            document.querySelector('#chat-page').style.display = 'block';
+            connect();
+
+        } catch (error) {
+            alert('Erreur de connexion');
+            console.error('Erreur:', error);
+        }
+    }
+
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+
+        stompClient.connect({}, onConnected, onError);
+    }
+
+    function onConnected() {
+        console.log('Connecté au serveur WebSocket');
+
+        stompClient.subscribe('/topic/public', onPublicMessage);
+        stompClient.subscribe('/user/' + username + '/topic/private', onPrivateMessage);
+
+        stompClient.send("/app/chat.addUser",
+            {},
+            JSON.stringify({
+                sender: username,
+                type: 'JOIN'
+            })
+        );
+    }
+
+    function onError(error) {
+        console.log('Erreur de connexion:', error);
+        alert('Erreur de connexion au serveur de chat');
+    }
+
+    function onPublicMessage(payload) {
+        const message = JSON.parse(payload.body);
+        console.log('Message public reçu:', message);
+
+        if (message.type === 'USERS_LIST') {
+            updateUsersList(message.content.split(','));
+        }
+    }
+
+    function onPrivateMessage(payload) {
+        console.log('Message privé reçu:', payload);
+        const message = JSON.parse(payload.body);
+        const otherUser = message.sender === username ? message.recipient : message.sender;
+
+        if (!conversations[otherUser]) {
+            conversations[otherUser] = [];
+        }
+        conversations[otherUser].push(message);
+
+        if (selectedUser === otherUser) {
+            displayMessages(otherUser);
+        }
+    }
+
+    function updateUsersList(users) {
+        const usersList = document.querySelector('#usersList');
+        usersList.innerHTML = '';
+        users.forEach(user => {
+            if (user && user !== username) {
+                const userItem = document.createElement('div');
+                userItem.classList.add('user-item');
+                if (user === selectedUser) {
+                    userItem.classList.add('active');
+                }
+                userItem.textContent = user;
+                userItem.onclick = () => selectUser(user);
+                usersList.appendChild(userItem);
+            }
+        });
+    }
+
+    function selectUser(user) {
+        selectedUser = user;
+        document.querySelectorAll('.user-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.textContent === user) {
+                item.classList.add('active');
+            }
+        });
+
+        document.querySelector('#noChatSelected').style.display = 'none';
+        document.querySelector('#chatArea').style.display = 'block';
+        document.querySelector('#chatWith').textContent = `Chat avec ${user}`;
+
+        displayMessages(user);
+    }
+
+    function displayMessages(user) {
+        const messageArea = document.querySelector('#messageArea');
+        messageArea.innerHTML = '';
+
+        if (conversations[user]) {
+            conversations[user].forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(msg.sender === username ? 'sent' : 'received');
+                messageDiv.textContent = `${msg.sender}: ${msg.content}`;
+                messageArea.appendChild(messageDiv);
+            });
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+    }
+
+    function sendMessage(event) {
+        event.preventDefault();
+
+        if (selectedUser && stompClient) {
+            const messageInput = document.querySelector('#message');
+            const messageContent = messageInput.value.trim();
+
+            if (messageContent && stompClient) {
+                const chatMessage = {
+                    sender: username,
+                    recipient: selectedUser,
+                    content: messageContent,
+                    type: 'CHAT'
+                };
+
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                messageInput.value = '';
+            }
+        }
+    }
+
+    window.onbeforeunload = function() {
+        if (stompClient && username) {
+            stompClient.send("/app/chat.disconnect",
+                {},
+                JSON.stringify({
+                    sender: username,
+                    type: 'LEAVE'
+                })
+            );
+        }
+    };
+
+    document.querySelector('#registerForm').addEventListener('submit', register, true);
+    document.querySelector('#loginForm').addEventListener('submit', login, true);
+    document.querySelector('#messageForm').addEventListener('submit', sendMessage, true);
+</script>
+</body>
+</html>
