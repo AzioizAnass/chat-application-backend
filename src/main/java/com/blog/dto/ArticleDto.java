@@ -5,7 +5,7 @@ import java.util.List;
 
 @Data
 public class ArticleDto {
-    private Long articleId;
+    private Long id;
     private String content;
     private String creationDate;
     private String title;

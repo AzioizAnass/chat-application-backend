@@ -40,13 +40,11 @@ public class ArticleService {
     }
 
     @Transactional
-    public Article updateArticle(Long id, Article articleDetails) {
-        Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Article", "id", id));
-        
-        article.setTitle(articleDetails.getTitle());
-        article.setContent(articleDetails.getContent());
-        return article;
+    public ArticleDto updateArticle(Long id, ArticleDto articleDetails) {
+        Article article = articleMapper.toEntity(articleDetails);
+        article.setId(id);
+        articleRepository.save(article);
+        return articleMapper.toDto(article);
     }
 
     public void deleteArticle(Long id) {

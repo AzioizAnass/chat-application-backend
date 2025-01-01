@@ -44,17 +44,4 @@ public class ChatMessageService {
         message.setType(entity.getType());
         return message;
     }
-
-    public void addUser(String username) {
-        connectedUsers.add(username);
-    }
-
-    public void removeUser(String username) {
-        connectedUsers.remove(username);
-        userRepository.findByUsername(username)
-                .ifPresent(user -> {
-                    user.setStatus("OFFLINE");
-                    userRepository.save(user);
-                });
-    }
 }

@@ -1,7 +1,6 @@
 package com.blog.controller;
 
 import com.blog.dto.ArticleDto;
-import com.blog.entity.Article;
 import com.blog.mapper.ArticleMapper;
 import com.blog.service.ArticleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ArticleResource {
     private final ArticleService articleService;
-    private final ArticleMapper articleMapper;
 
     @Operation(summary = "Get all articles", description = "Returns a list of all articles")
     @ApiResponse(responseCode = "200", description = "List of articles retrieved successfully",
@@ -69,11 +66,8 @@ public class ArticleResource {
     public ResponseEntity<ArticleDto> updateArticle(
             @Parameter(description = "ID of the article to update") @PathVariable Long id,
             @Valid @RequestBody ArticleDto articleDto) {
-        Article article = articleMapper.toEntity(articleDto);
-        Article updatedArticle = articleService.updateArticle(id, article);
-        return updatedArticle != null
-                ? ResponseEntity.ok(articleMapper.toDto(updatedArticle))
-                : ResponseEntity.notFound().build();
+        ArticleDto updatedArticle = articleService.updateArticle(id, articleDto);
+        return ResponseEntity.ok(updatedArticle);
     }
 
     @Operation(summary = "Delete article", description = "Deletes an article by its ID")

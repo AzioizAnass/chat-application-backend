@@ -6,13 +6,17 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
-    @Mapping(source = "article.id", target = "articleId")
-    @Mapping(source = "user.id", target = "userId")
+    @Mapping(target = "article",source="article",ignore = true )
     CommentDto toDto(Comment comment);
 
-    @Mapping(target = "article", ignore = true)
-    @Mapping(target = "user", ignore = true)
+
     Comment toEntity(CommentDto commentDto);
+
+    List<CommentDto> toDto(List<Comment> comment);
+
+    List<Comment> toEntity(List<CommentDto> commentDto);
 }

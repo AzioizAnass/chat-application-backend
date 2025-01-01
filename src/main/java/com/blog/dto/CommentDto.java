@@ -1,12 +1,17 @@
 package com.blog.dto;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+import java.time.LocalDateTime;
+
+@Setter
+@Getter
 public class CommentDto {
     private Long id;
     private String content;
     private String date;
-    private Long articleId;
-    private Long userId;
+    private ArticleDto article;
+    private UserDto user;
 }

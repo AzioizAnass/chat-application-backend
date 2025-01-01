@@ -5,7 +5,7 @@ import com.blog.entity.Article;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {CommentMapper.class})
+@Mapper(componentModel = "spring")
 public interface ArticleMapper {
 
     @Mapping(target = "comments", ignore = true)
