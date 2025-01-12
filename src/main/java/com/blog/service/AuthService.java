@@ -49,7 +49,12 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
 
         userRepository.save(user);
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(signUpDto.getUsername(), signUpDto.getPassword()));
 
-        return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = tokenProvider.createToken(authentication.getName());
+
+        return new ResponseEntity<>(new JwtAuthResponse(token),HttpStatus.OK);
     }
 }

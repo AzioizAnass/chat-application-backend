@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,6 +43,18 @@ public class ArticleResource {
     public ResponseEntity<ArticleDto> getArticleById(
             @Parameter(description = "ID of the article to retrieve") @PathVariable Long id) {
         return ResponseEntity.ok(articleService.getById(id));
+    }
+    @CrossOrigin
+    @Operation(summary = "Get article by Page", description = "Retrieve articles for a specific page with a dynamic page size")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Articles Retrieved successfully",
+                    content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleDto.class)) }),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    @GetMapping(value="/getByPage/{pageSize}/{pageNo}")
+    public ResponseEntity<Page<ArticleDto>> getArticleByPage(@PathVariable Integer pageSize, @PathVariable Integer pageNo ){
+        return ResponseEntity.ok(articleService.findArticlesByPage(pageNo,pageSize));
     }
 
     @Operation(summary = "Create a new article", description = "Creates a new article with the provided details")

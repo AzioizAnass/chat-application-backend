@@ -6,6 +6,9 @@ import com.blog.exception.ResourceNotFoundException;
 import com.blog.mapper.ArticleMapper;
 import com.blog.repository.ArticleRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,11 @@ public class ArticleService {
          return articleMapper.toDto(article);
     }
 
+    public Page<ArticleDto> findArticlesByPage(Integer pageNo , Integer pageSize) {
+        Pageable pagebale = PageRequest.of(pageNo, pageSize);
+        Page<Article> articlePage = articleRepository.getAllBy(pagebale);
+        return articlePage.map(articleMapper::toDto);
+    }
     public ArticleDto createArticle(ArticleDto articleDto) {
         Article article = articleMapper.toEntity(articleDto);
         article.setCreationDate(Instant.now().toString());

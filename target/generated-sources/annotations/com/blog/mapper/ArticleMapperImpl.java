@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-12-31T18:54:07+0000",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.12 (Oracle Corporation)"
+    date = "2025-01-02T21:07:06+0000",
+    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.41.0.v20241217-1506, environment: Java 17.0.13 (Eclipse Adoptium)"
 )
 @Component
 public class ArticleMapperImpl implements ArticleMapper {
@@ -27,9 +27,9 @@ public class ArticleMapperImpl implements ArticleMapper {
 
         ArticleDto articleDto = new ArticleDto();
 
-        articleDto.setId( article.getId() );
         articleDto.setContent( article.getContent() );
         articleDto.setCreationDate( article.getCreationDate() );
+        articleDto.setId( article.getId() );
         articleDto.setTitle( article.getTitle() );
 
         return articleDto;
@@ -43,11 +43,11 @@ public class ArticleMapperImpl implements ArticleMapper {
 
         Article article = new Article();
 
-        article.setId( articleDto.getId() );
+        article.setComments( commentDtoListToCommentList( articleDto.getComments() ) );
         article.setContent( articleDto.getContent() );
         article.setCreationDate( articleDto.getCreationDate() );
+        article.setId( articleDto.getId() );
         article.setTitle( articleDto.getTitle() );
-        article.setComments( commentDtoListToCommentList( articleDto.getComments() ) );
 
         return article;
     }
@@ -59,8 +59,8 @@ public class ArticleMapperImpl implements ArticleMapper {
 
         User user = new User();
 
-        user.setId( userDto.getId() );
         user.setEmail( userDto.getEmail() );
+        user.setId( userDto.getId() );
         user.setUsername( userDto.getUsername() );
 
         return user;
@@ -73,10 +73,10 @@ public class ArticleMapperImpl implements ArticleMapper {
 
         Comment comment = new Comment();
 
-        comment.setId( commentDto.getId() );
+        comment.setArticle( toEntity( commentDto.getArticle() ) );
         comment.setContent( commentDto.getContent() );
         comment.setDate( commentDto.getDate() );
-        comment.setArticle( toEntity( commentDto.getArticle() ) );
+        comment.setId( commentDto.getId() );
         comment.setUser( userDtoToUser( commentDto.getUser() ) );
 
         return comment;
