@@ -27,6 +27,9 @@ public class User {
     @Column(name = "username")
     private String username;
 
+    private String firstName;
+    private String lastName;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Comment> comments;
 

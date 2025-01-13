@@ -45,8 +45,11 @@ public class AuthService {
 
         User user = new User();
         user.setUsername(signUpDto.getUsername());
+        user.setFirstName(signUpDto.getFirstName());
+        user.setLastName(signUpDto.getLastName());
         user.setEmail(signUpDto.getEmail());
         user.setPassword(passwordEncoder.encode(signUpDto.getPassword()));
+
 
         userRepository.save(user);
         Authentication authentication = authenticationManager.authenticate(

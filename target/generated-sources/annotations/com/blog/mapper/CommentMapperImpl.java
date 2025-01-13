@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-01-02T21:07:06+0000",
-    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.41.0.v20241217-1506, environment: Java 17.0.13 (Eclipse Adoptium)"
+    date = "2025-01-13T20:14:15+0000",
+    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 17.0.12 (Oracle Corporation)"
 )
 @Component
 public class CommentMapperImpl implements CommentMapper {
@@ -27,9 +27,9 @@ public class CommentMapperImpl implements CommentMapper {
 
         CommentDto commentDto = new CommentDto();
 
+        commentDto.setId( comment.getId() );
         commentDto.setContent( comment.getContent() );
         commentDto.setDate( comment.getDate() );
-        commentDto.setId( comment.getId() );
         commentDto.setUser( userToUserDto( comment.getUser() ) );
 
         return commentDto;
@@ -43,10 +43,10 @@ public class CommentMapperImpl implements CommentMapper {
 
         Comment comment = new Comment();
 
-        comment.setArticle( articleDtoToArticle( commentDto.getArticle() ) );
+        comment.setId( commentDto.getId() );
         comment.setContent( commentDto.getContent() );
         comment.setDate( commentDto.getDate() );
-        comment.setId( commentDto.getId() );
+        comment.setArticle( articleDtoToArticle( commentDto.getArticle() ) );
         comment.setUser( userDtoToUser( commentDto.getUser() ) );
 
         return comment;
@@ -87,9 +87,11 @@ public class CommentMapperImpl implements CommentMapper {
 
         UserDto userDto = new UserDto();
 
-        userDto.setEmail( user.getEmail() );
         userDto.setId( user.getId() );
+        userDto.setEmail( user.getEmail() );
         userDto.setUsername( user.getUsername() );
+        userDto.setFirstName( user.getFirstName() );
+        userDto.setLastName( user.getLastName() );
 
         return userDto;
     }
@@ -101,11 +103,11 @@ public class CommentMapperImpl implements CommentMapper {
 
         Article article = new Article();
 
-        article.setComments( toEntity( articleDto.getComments() ) );
+        article.setId( articleDto.getId() );
         article.setContent( articleDto.getContent() );
         article.setCreationDate( articleDto.getCreationDate() );
-        article.setId( articleDto.getId() );
         article.setTitle( articleDto.getTitle() );
+        article.setComments( toEntity( articleDto.getComments() ) );
 
         return article;
     }
@@ -117,9 +119,11 @@ public class CommentMapperImpl implements CommentMapper {
 
         User user = new User();
 
-        user.setEmail( userDto.getEmail() );
         user.setId( userDto.getId() );
+        user.setEmail( userDto.getEmail() );
         user.setUsername( userDto.getUsername() );
+        user.setFirstName( userDto.getFirstName() );
+        user.setLastName( userDto.getLastName() );
 
         return user;
     }

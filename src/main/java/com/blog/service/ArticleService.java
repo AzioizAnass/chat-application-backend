@@ -30,6 +30,13 @@ public class ArticleService {
                 .collect(Collectors.toList());
     }
 
+    public List<ArticleDto> searchByKeywordArticle(String keyword) {
+        return articleRepository.searchByKeyword(keyword)
+                .stream()
+                .map(article -> articleMapper.toDto(article))
+                .collect(Collectors.toList());
+    }
+
     public ArticleDto getById(Long id){
         Article article= articleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Article", "id", id));

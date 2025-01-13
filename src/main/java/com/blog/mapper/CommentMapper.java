@@ -12,11 +12,7 @@ import java.util.List;
 public interface CommentMapper {
     @Mapping(target = "article",source="article",ignore = true )
     CommentDto toDto(Comment comment);
-
-
     Comment toEntity(CommentDto commentDto);
-
     List<CommentDto> toDto(List<Comment> comment);
-
     List<Comment> toEntity(List<CommentDto> commentDto);
 }

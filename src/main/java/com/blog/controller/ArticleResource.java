@@ -33,6 +33,15 @@ public class ArticleResource {
         return ResponseEntity.ok(articleService.getAllArticles());
     }
 
+    @Operation(summary = "Get Articles By Keyword", description = "Search Articles By Keyword")
+    @ApiResponse(responseCode = "200", description = "List of articles retrieved successfully",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ArticleDto.class)))
+    @GetMapping(value = "/keyword/{keyword}")
+    public List<ArticleDto> searchByKeywordArticle(@PathVariable String keyword){
+        return articleService.searchByKeywordArticle(keyword);
+    }
+
+
     @Operation(summary = "Get article by ID", description = "Returns a single article by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Article found",
