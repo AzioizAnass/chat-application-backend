@@ -4,6 +4,7 @@ import com.blog.dto.JwtAuthResponse;
 import com.blog.dto.LoginDto;
 import com.blog.dto.SignUpDto;
 import com.blog.entity.User;
+import com.blog.dto.UserDto;
 import com.blog.repository.UserRepository;
 import com.blog.security.JwtTokenProvider;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -29,7 +32,7 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail(), loginDto.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = tokenProvider.createToken(authentication.getName());
+        String token = tokenProvider.createToken(authentication);
         
         return new JwtAuthResponse(token);
     }
@@ -56,8 +59,16 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(signUpDto.getUsername(), signUpDto.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = tokenProvider.createToken(authentication.getName());
+        String token = tokenProvider.createToken(authentication);
 
         return new ResponseEntity<>(new JwtAuthResponse(token),HttpStatus.OK);
+    }
+
+    public UserDto getUser(String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        UserDto auth = tokenProvider.getAuthentication(token);
+        return auth;
     }
 }
