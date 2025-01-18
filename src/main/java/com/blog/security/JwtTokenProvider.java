@@ -28,7 +28,7 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration}")
     private long validityInMilliseconds;
 
-    private final UserDetailsService userDetailsService;
+    private final UserService userDetailsService;
 
     public JwtTokenProvider(UserService userService, UserService userDetailsService) {
         this.userService = userService;

@@ -21,7 +21,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
-    private final UserDetailsService userDetailsService;
+    private final UserService userDetailsService;
 
     @Autowired
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, UserService userDetailsService) {
@@ -31,8 +31,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  FilterChain filterChain) throws ServletException, IOException {
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String path = request.getRequestURI();
+
+        // Add more specific exclusion paths
+        if (path.contains("/api/auth/") ||
+                path.contains("/login") ||
+                path.contains("/register") ||
+                path.contains("/error")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Check if already authenticated
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String jwt = getJwtFromRequest(request);
 
@@ -40,14 +57,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = tokenProvider.getEmail(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+            logger.error("Cannot set user authentication", ex);
+            SecurityContextHolder.clearContext(); // Clear context on error
         }
 
         filterChain.doFilter(request, response);

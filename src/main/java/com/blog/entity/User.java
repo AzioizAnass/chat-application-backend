@@ -7,10 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table( uniqueConstraints = {
@@ -35,7 +32,13 @@ public class User implements UserDetails {
 
     private String firstName;
     private String lastName;
-    private String role;
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Comment> comments;
@@ -44,7 +47,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + roles));
     }
 
     @Override
@@ -68,7 +71,12 @@ public class User implements UserDetails {
     }
 
     public Set<Role> getRoles() {
-        //TODO : Implement logic
-        return  null ;
+        return  this.roles ;
+    }
+
+    public User() {
+        Role userRole = new Role();
+        userRole.setName("USER");
+        this.roles.add(userRole);
     }
 }
