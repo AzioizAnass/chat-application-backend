@@ -1,166 +1,125 @@
 package com.blog.controller;
 
+import com.blog.dto.UserDto;
 import com.blog.entity.User;
 import com.blog.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class UserIntegrationTest {
+@WebMvcTest(UserResource.class)
+public class UserIntegrationTest {
 
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
     private UserService userService;
 
-    @InjectMocks
-    private UserResource userResource;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private User user;
+    private UserDto userDto;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        // Créer un utilisateur de test
+        user = new User();
+        user.setId(1L);
+        user.setEmail("john.doe@example.com");
+        user.setUsername("John Doe");
+
+        // Créer un DTO utilisateur correspondant
+        userDto = new UserDto(
+                1L,
+                "john.doe@example.com",
+                "johndoe",
+                "John",
+                "Doe",
+                "USER"
+        );
     }
 
     @Test
-    void getAllUsers_ShouldReturnListOfUsers() {
-        // Arrange
-        List<User> mockUsers = new ArrayList<>();
-        User user1 = new User();
-        user1.setId(1L);
-        user1.setEmail("user1@example.com");
-        user1.setUsername("user1");
-        mockUsers.add(user1);
+    void shouldGetAllUsers() throws Exception {
+        List<UserDto> users = Arrays.asList(userDto);
 
-        User user2 = new User();
-        user2.setId(2L);
-        user2.setEmail("user2@example.com");
-        user2.setUsername("user2");
-        mockUsers.add(user2);
+        when(userService.getAllUsers()).thenReturn(users);
 
-        when(userService.getAllUsers()).thenReturn(mockUsers);
+        mockMvc.perform(get("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(users.size()))
+                .andExpect(jsonPath("$[0].email").value("john.doe@example.com"))
+                .andExpect(jsonPath("$[0].username").value("johndoe"));
 
-        // Act
-        List<User> result = userResource.getAllUsers();
-
-        // Assert
-        assertEquals(mockUsers, result);
         verify(userService, times(1)).getAllUsers();
     }
 
     @Test
-    void getUserById_ShouldReturnUser_WhenUserExists() {
-        // Arrange
-        Long userId = 1L;
-        User mockUser = new User();
-        mockUser.setId(userId);
-        mockUser.setEmail("user@example.com");
-        mockUser.setUsername("user");
+    void shouldGetUserById() throws Exception {
+        when(userService.getUserById(1L)).thenReturn(userDto);
 
-        when(userService.getUserById(userId)).thenReturn(Optional.of(mockUser));
+        mockMvc.perform(get("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("john.doe@example.com"))
+                .andExpect(jsonPath("$.username").value("johndoe"))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"));
 
-        // Act
-        ResponseEntity<User> response = userResource.getUserById(userId);
-
-        // Assert
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(mockUser, response.getBody());
-        verify(userService, times(1)).getUserById(userId);
+        verify(userService, times(1)).getUserById(1L);
     }
 
     @Test
-    void getUserById_ShouldReturnNotFound_WhenUserDoesNotExist() {
-        // Arrange
-        Long userId = 1L;
-        when(userService.getUserById(userId)).thenReturn(Optional.empty());
+    void shouldCreateUser() throws Exception {
+        when(userService.createUser(any(User.class))).thenReturn(userDto);
 
-        // Act
-        ResponseEntity<User> response = userResource.getUserById(userId);
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("john.doe@example.com"))
+                .andExpect(jsonPath("$.username").value("johndoe"));
 
-        // Assert
-        assertEquals(404, response.getStatusCodeValue());
-        verify(userService, times(1)).getUserById(userId);
+        verify(userService, times(1)).createUser(any(User.class));
     }
 
     @Test
-    void createUser_ShouldReturnCreatedUser() {
-        // Arrange
-        User newUser = new User();
-        newUser.setEmail("newuser@example.com");
-        newUser.setUsername("newuser");
+    void shouldUpdateUser() throws Exception {
+        when(userService.updateUser(eq(1L), any(User.class))).thenReturn(userDto);
 
-        User createdUser = new User();
-        createdUser.setId(1L);
-        createdUser.setEmail("newuser@example.com");
-        createdUser.setUsername("newuser");
+        mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("john.doe@example.com"))
+                .andExpect(jsonPath("$.username").value("johndoe"));
 
-        when(userService.createUser(newUser)).thenReturn(createdUser);
-
-        // Act
-        User result = userResource.createUser(newUser);
-
-        // Assert
-        assertEquals(createdUser, result);
-        verify(userService, times(1)).createUser(newUser);
+        verify(userService, times(1)).updateUser(eq(1L), any(User.class));
     }
 
     @Test
-    void updateUser_ShouldReturnUpdatedUser_WhenUserExists() {
-        // Arrange
-        Long userId = 1L;
-        User updatedUser = new User();
-        updatedUser.setEmail("updated@example.com");
-        updatedUser.setUsername("updateduser");
+    void shouldDeleteUser() throws Exception {
+        doNothing().when(userService).deleteUser(1L);
 
-        User mockUpdatedUser = new User();
-        mockUpdatedUser.setId(userId);
-        mockUpdatedUser.setEmail("updated@example.com");
-        mockUpdatedUser.setUsername("updateduser");
+        mockMvc.perform(delete("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
-        when(userService.updateUser(userId, updatedUser)).thenReturn(mockUpdatedUser);
-
-        // Act
-        ResponseEntity<User> response = userResource.updateUser(userId, updatedUser);
-
-        // Assert
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(mockUpdatedUser, response.getBody());
-        verify(userService, times(1)).updateUser(userId, updatedUser);
-    }
-
-    @Test
-    void updateUser_ShouldReturnNotFound_WhenUserDoesNotExist() {
-        // Arrange
-        Long userId = 1L;
-        User updatedUser = new User();
-
-        when(userService.updateUser(userId, updatedUser)).thenReturn(null);
-
-        // Act
-        ResponseEntity<User> response = userResource.updateUser(userId, updatedUser);
-
-        // Assert
-        assertEquals(404, response.getStatusCodeValue());
-        verify(userService, times(1)).updateUser(userId, updatedUser);
-    }
-
-    @Test
-    void deleteUser_ShouldReturnVoidResponse() {
-        // Arrange
-        Long userId = 1L;
-
-        // Act
-        ResponseEntity<Void> response = userResource.deleteUser(userId);
-
-        // Assert
-        assertEquals(200, response.getStatusCodeValue());
-        verify(userService, times(1)).deleteUser(userId);
+        verify(userService, times(1)).deleteUser(1L);
     }
 }

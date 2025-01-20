@@ -6,6 +6,7 @@ import com.blog.entity.User;
 import com.blog.exception.ResourceNotFoundException;
 import com.blog.mapper.UserMapper;
 import com.blog.repository.UserRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,34 +20,36 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class UserService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final Set<String> connectedUsers = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private UserMapper userMapper;
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public UserDto getUserById(Long id) {
+        return userMapper.toDto(userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id)));
     }
 
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public UserDto createUser(User user) {
+        return userMapper.toDto(userRepository.save(user));
     }
 
-    public User updateUser(Long id, User userDetails) {
+    public UserDto updateUser(Long id, User userDetails) {
         Optional<User> user = userRepository.findById(id);
         if (user.isPresent()) {
             User existingUser = user.get();
             existingUser.setEmail(userDetails.getEmail());
             existingUser.setUsername(userDetails.getUsername());
             existingUser.setPassword(userDetails.getPassword());
-            return userRepository.save(existingUser);
+            return userMapper.toDto(userRepository.save(existingUser));
         }
         return null;
     }

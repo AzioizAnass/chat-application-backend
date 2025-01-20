@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-01-18T21:40:28+0000",
-    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.41.0.v20241217-1506, environment: Java 17.0.13 (Eclipse Adoptium)"
+    date = "2025-01-20T00:04:28+0000",
+    comments = "version: 1.5.3.Final, compiler: javac, environment: Java 17.0.12 (Oracle Corporation)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
@@ -19,17 +19,17 @@ public class UserMapperImpl implements UserMapper {
             return null;
         }
 
-        String email = null;
-        String firstName = null;
         Long id = null;
-        String lastName = null;
+        String email = null;
         String username = null;
+        String firstName = null;
+        String lastName = null;
 
-        email = user.getEmail();
-        firstName = user.getFirstName();
         id = user.getId();
-        lastName = user.getLastName();
+        email = user.getEmail();
         username = user.getUsername();
+        firstName = user.getFirstName();
+        lastName = user.getLastName();
 
         String role = null;
 
@@ -46,11 +46,11 @@ public class UserMapperImpl implements UserMapper {
 
         User user = new User();
 
-        user.setEmail( userDto.getEmail() );
-        user.setFirstName( userDto.getFirstName() );
         user.setId( userDto.getId() );
-        user.setLastName( userDto.getLastName() );
+        user.setEmail( userDto.getEmail() );
         user.setUsername( userDto.getUsername() );
+        user.setFirstName( userDto.getFirstName() );
+        user.setLastName( userDto.getLastName() );
 
         return user;
     }

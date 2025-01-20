@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-01-18T21:40:29+0000",
-    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.41.0.v20241217-1506, environment: Java 17.0.13 (Eclipse Adoptium)"
+    date = "2025-01-20T00:04:28+0000",
+    comments = "version: 1.5.3.Final, compiler: javac, environment: Java 17.0.12 (Oracle Corporation)"
 )
 @Component
 public class ArticleMapperImpl implements ArticleMapper {
@@ -25,11 +25,11 @@ public class ArticleMapperImpl implements ArticleMapper {
 
         ArticleDto articleDto = new ArticleDto();
 
-        articleDto.setComments( commentMapper.toDto( article.getComments() ) );
+        articleDto.setId( article.getId() );
         articleDto.setContent( article.getContent() );
         articleDto.setCreationDate( article.getCreationDate() );
-        articleDto.setId( article.getId() );
         articleDto.setTitle( article.getTitle() );
+        articleDto.setComments( commentMapper.toDto( article.getComments() ) );
 
         return articleDto;
     }
@@ -42,11 +42,11 @@ public class ArticleMapperImpl implements ArticleMapper {
 
         Article article = new Article();
 
-        article.setComments( commentMapper.toEntity( articleDto.getComments() ) );
+        article.setId( articleDto.getId() );
         article.setContent( articleDto.getContent() );
         article.setCreationDate( articleDto.getCreationDate() );
-        article.setId( articleDto.getId() );
         article.setTitle( articleDto.getTitle() );
+        article.setComments( commentMapper.toEntity( articleDto.getComments() ) );
 
         return article;
     }
